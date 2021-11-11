@@ -19,11 +19,40 @@ async function run() {
         await client.connect();
 
         const database = client.db("mansion");
+        const usersCollection = database.collection("users");
         const reviewsCollection = database.collection("reviews");
         const apartmentsCollection = database.collection("apartments");
         const bookingsCollection = database.collection("bookings");
 
 
+        //post a user
+        app.post('/users', async (req, res) => {
+            const user = req.body
+            const result = await usersCollection.insertOne(user);
+            res.json(result);
+        })
+
+        //make a user admin
+        app.put('/users', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const updateDoc = { $set: { role: 'admin' } };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.json(result);
+
+        })
+
+        //get a specific user
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true
+            }
+            res.json({ admin: isAdmin })
+        })
 
         //post a apartment
         app.post('/apartments', async (req, res) => {
