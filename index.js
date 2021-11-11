@@ -24,12 +24,14 @@ async function run() {
         const bookingsCollection = database.collection("bookings");
 
 
-
+        //get All Arartments
         app.get('/apartments', async (req, res) => {
             const cursor = apartmentsCollection.find({});
             const result = await cursor.toArray()
             res.json(result)
         })
+
+        //get a specific apartment for booking
         app.get('/apartments/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
@@ -37,6 +39,7 @@ async function run() {
             res.json(result)
         })
 
+        //booking apartment
         app.post('/bookings', async (req, res) => {
             const booking = req.body
             const result = await bookingsCollection.insertOne(booking);
@@ -44,12 +47,14 @@ async function run() {
 
         })
 
+        //get all bookings
         app.get('/bookings', async (req, res) => {
             const cursor = bookingsCollection.find({})
             const result = await cursor.toArray()
             res.json(result)
         })
 
+        //delete a booking
         app.delete('/bookings/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
@@ -57,6 +62,23 @@ async function run() {
             res.send(result)
         })
 
+        //update the status of booking
+        app.put('/bookings/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true }
+            const updateDoc = {
+                $set: {
+                    status: 'Shipped'
+                },
+
+            };
+            const result = await bookingCollection.updateOne(filter, updateDoc, options)
+            res.send(result)
+
+        })
+
+        //get an user all bookings
         app.get("/mybookings/:email", async (req, res) => {
             const email = req.params.email
             const query = { email: email }
@@ -64,6 +86,7 @@ async function run() {
             res.send(result);
         });
 
+        //delete booking by a user
         app.delete("/mybookings/:id", async (req, res) => {
             const id = (req.params.id);
             const query = { _id: ObjectId(id) }
@@ -71,12 +94,15 @@ async function run() {
             res.send(result);
         });
 
+
+        //get all reviews
         app.get('/reviews', async (req, res) => {
             const cursor = reviewsCollection.find({});
             const result = await cursor.toArray()
             res.json(result)
         })
 
+        //post a review
         app.post('/reviews', async (req, res) => {
             const review = req.body
             const result = await reviewsCollection.insertOne(review);
