@@ -73,7 +73,7 @@ async function run() {
                 },
 
             };
-            const result = await bookingCollection.updateOne(filter, updateDoc, options)
+            const result = await bookingsCollection.updateOne(filter, updateDoc, options)
             res.send(result)
 
         })
