@@ -24,6 +24,14 @@ async function run() {
         const bookingsCollection = database.collection("bookings");
 
 
+
+        //post a apartment
+        app.post('/apartments', async (req, res) => {
+            const apartment = req.body
+            const result = await apartmentsCollection.insertOne(apartment)
+            res.json(result)
+        })
+
         //get All Arartments
         app.get('/apartments', async (req, res) => {
             const cursor = apartmentsCollection.find({});
