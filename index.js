@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const { MongoClient } = require('mongodb');
 require('dotenv').config()
+const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
 
 app.use(cors())
@@ -20,12 +21,29 @@ async function run() {
         const database = client.db("mansion");
         const reviewsCollection = database.collection("reviews");
         const apartmentsCollection = database.collection("apartments");
+        const bookingsCollection = database.collection("bookings");
+
 
 
         app.get('/apartments', async (req, res) => {
             const cursor = apartmentsCollection.find({});
             const result = await cursor.toArray()
             res.json(result)
+        })
+        app.get('/apartments/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const result = await apartmentsCollection.findOne(query);
+            res.json(result)
+        })
+
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body
+            console.log(booking)
+            const result = await bookingsCollection.insertOne(booking);
+            console.log(result);
+            res.json(result)
+
         })
 
 
