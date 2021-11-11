@@ -39,18 +39,37 @@ async function run() {
 
         app.post('/bookings', async (req, res) => {
             const booking = req.body
-            console.log(booking)
             const result = await bookingsCollection.insertOne(booking);
-            console.log(result);
             res.json(result)
 
         })
 
+        app.get("/mybookings/:email", async (req, res) => {
+            const email = req.params.email
+            const query = { email: email }
+            const result = await bookingsCollection.find(query).toArray();
+            res.send(result);
+        });
+
+        app.delete("/mybookings/:id", async (req, res) => {
+            const id = (req.params.id);
+            const query = { _id: ObjectId(id) }
+            const result = await bookingsCollection.deleteOne(query);
+            res.send(result);
+        });
 
         app.get('/reviews', async (req, res) => {
             const cursor = reviewsCollection.find({});
             const result = await cursor.toArray()
             res.json(result)
+        })
+
+        app.post('/reviews', async (req, res) => {
+            const review = req.body
+            const result = await reviewsCollection.insertOne(review);
+            res.json(result);
+
+
         })
 
     }
