@@ -76,6 +76,15 @@ async function run() {
             res.json(result)
         })
 
+        //delete a specific apartment from db
+        app.delete('/apartments/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await apartmentsCollection.deleteOne(query);
+            res.send(result)
+
+        })
+
         //booking apartment
         app.post('/bookings', async (req, res) => {
             const booking = req.body
