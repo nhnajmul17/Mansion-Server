@@ -5,6 +5,7 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config()
 const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.STRIPE_SECRET)
 
 app.use(cors())
 app.use(express.json())
@@ -100,6 +101,14 @@ async function run() {
             res.json(result)
         })
 
+        app.get('/bookings/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await bookingsCollection.findOne(query)
+            res.json(result)
+
+        })
+
         //delete a booking
         app.delete('/bookings/:id', async (req, res) => {
             const id = req.params.id;
@@ -108,14 +117,31 @@ async function run() {
             res.send(result)
         })
 
+        //update payment for a booking
+        /*    app.put('bookings/:id', async (req, res) => {
+               const id = req.params.id
+               const payment = req.body
+               const filter = { _id: ObjectId(id) }
+               const updateDoc = {
+                   $set: {
+                       payment: payment
+                   }
+               };
+               const result = await bookingsCollection.updateOne(filter, updateDoc)
+               res.send(result)
+           }) */
+
         //update the status of booking
         app.put('/bookings/:id', async (req, res) => {
             const id = req.params.id
+            const payment = req.body
+
             const filter = { _id: ObjectId(id) }
             const options = { upsert: true }
             const updateDoc = {
                 $set: {
-                    status: 'Approved'
+                    status: 'Approved',
+                    payment: payment
                 },
 
             };
@@ -131,6 +157,9 @@ async function run() {
             const result = await bookingsCollection.find(query).toArray();
             res.send(result);
         });
+
+        //get an user specific booking
+
 
         //delete booking by a user
         app.delete("/mybookings/:id", async (req, res) => {
@@ -155,6 +184,20 @@ async function run() {
             res.json(result);
 
 
+        })
+
+
+        //srtipe payment
+        app.post('/create-payment-intent', async (req, res) => {
+            const paymentInfo = req.body;
+            const amount = paymentInfo.apartmentprice * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                currency: 'usd',
+                amount: amount,
+                payment_method_types: ['card']
+
+            })
+            res.json({ clientSecret: paymentIntent.client_secret })
         })
 
     }
