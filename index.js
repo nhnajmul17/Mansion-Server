@@ -6,13 +6,39 @@ require('dotenv').config()
 const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
 const stripe = require('stripe')(process.env.STRIPE_SECRET)
+const admin = require("firebase-admin");
 
+
+//middleware
 app.use(cors())
 app.use(express.json())
 
 
+//mongodb connection
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.3zfz5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+
+// firebase connection
+var serviceAccount = require("./mansion-residence-firebase-adminsdk-uz0k5-e97cc93f2a.json");
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+//verify jwt token
+async function verifyToken(req, res, next) {
+    if (req.headers.authorization?.startsWith('Bearer ')) {
+        const idtoken = req.headers.authorization.split('Bearer ')[1];
+        try {
+            const decodedUser = await admin.auth().verifyIdToken(idtoken)
+            req.decodedUserEmail = decodedUser.email
+        }
+        catch {
+
+        }
+    }
+    next()
+}
 
 
 async function run() {
@@ -34,12 +60,22 @@ async function run() {
         })
 
         //make a user admin
-        app.put('/users', async (req, res) => {
+        app.put('/users', verifyToken, async (req, res) => {
             const user = req.body;
-            const filter = { email: user.email };
-            const updateDoc = { $set: { role: 'admin' } };
-            const result = await usersCollection.updateOne(filter, updateDoc);
-            res.json(result);
+            const requester = req.decodedUserEmail
+            if (requester) {
+                const requesterAccount = await usersCollection.findOne({ email: requester })
+                if (requesterAccount.role === 'admin') {
+                    const filter = { email: user.email };
+                    const updateDoc = { $set: { role: 'admin' } };
+                    const result = await usersCollection.updateOne(filter, updateDoc);
+                    res.json(result);
+                }
+                else {
+                    res.status(401)
+                }
+            }
+
 
         })
 
@@ -88,6 +124,7 @@ async function run() {
 
         //booking apartment
         app.post('/bookings', async (req, res) => {
+
             const booking = req.body
             const result = await bookingsCollection.insertOne(booking);
             res.json(result)
@@ -151,11 +188,17 @@ async function run() {
         })
 
         //get an user all bookings
-        app.get("/mybookings/:email", async (req, res) => {
+        app.get("/mybookings/:email", verifyToken, async (req, res) => {
             const email = req.params.email
-            const query = { email: email }
-            const result = await bookingsCollection.find(query).toArray();
-            res.send(result);
+            if (email === req.decodedUserEmail) {
+                const query = { email: email }
+                const result = await bookingsCollection.find(query).toArray();
+                res.send(result);
+            }
+            else {
+                res.status(401).json({ message: 'Unauthorized user' })
+            }
+
         });
 
         //get an user specific booking
