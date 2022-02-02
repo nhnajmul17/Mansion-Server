@@ -17,10 +17,10 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // firebase connection
-var serviceAccount = require("./mansion-residence-firebase-adminsdk-uz0k5-e97cc93f2a.json");
+/* var serviceAccount = require("./mansion-residence-firebase-adminsdk-uz0k5-e97cc93f2a.json");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
-});
+}); */
 
 //verify jwt token
 async function verifyToken(req, res, next) {
