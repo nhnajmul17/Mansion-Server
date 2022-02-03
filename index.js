@@ -57,12 +57,22 @@ async function run() {
         })
 
         //make a user admin
-        app.put('/users', async (req, res) => {
+        app.put('/users', verifyToken, async (req, res) => {
             const user = req.body;
-            const filter = { email: user.email };
-            const updateDoc = { $set: { role: 'admin' } };
-            const result = await usersCollection.updateOne(filter, updateDoc);
-            res.json(result);
+            const requester = req.decodedUserEmail
+            if (requester) {
+                const requesterAccount = await usersCollection.findOne({ email: requester })
+                if (requesterAccount.role === 'admin') {
+                    const filter = { email: user.email };
+                    const updateDoc = { $set: { role: 'admin' } };
+                    const result = await usersCollection.updateOne(filter, updateDoc);
+                    res.json(result);
+                }
+                else {
+                    res.status(401)
+                }
+            }
+
 
         })
 
