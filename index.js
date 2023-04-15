@@ -40,7 +40,7 @@ async function verifyToken(req, res, next) {
 
 async function run() {
     try {
-        await client.connect();
+        client.connect();
 
         const database = client.db("mansion");
         const usersCollection = database.collection("users");
